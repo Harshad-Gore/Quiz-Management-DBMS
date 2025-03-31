@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Buster | Create Professional Quizzes</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.6.0/dist/full.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="mb-8 animate__animated animate__fadeIn">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-primary">
+                    <i class="fas fa-poll mr-2"></i>QuizBuster
+                </h1>
+                <nav>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-folder-open mr-2"></i> My Quizzes
+                    </button>
+                </nav>
+            </div>
+            <p class="text-gray-600 mt-2">Create and manage professional quizzes</p>
+        </header>
+
+        <!-- Quiz Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8 animate__animated animate__fadeInUp">
+            <!-- Quiz Metadata -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="quiz-title" class="label">
+                        <span class="label-text">Quiz Title *</span>
+                    </label>
+                    <input type="text" id="quiz-title" placeholder="Enter quiz title"
+                        class="input input-bordered w-full">
+                </div>
+                <div>
+                    <label for="quiz-id" class="label">
+                        <span class="label-text">Quiz ID (Unique)</span>
+                    </label>
+                    <div class="flex">
+                        <input type="text" id="quiz-id" placeholder="Will be auto-generated"
+                            class="input input-bordered w-full" readonly>
+                        <button id="generate-id-btn" class="btn btn-ghost ml-2">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="quiz-description" class="label">
+                    <span class="label-text">Description</span>
+                </label>
+                <textarea id="quiz-description" rows="3" placeholder="Enter quiz description"
+                    class="textarea textarea-bordered w-full"></textarea>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- questions Container -->
+            <div id="questions-container">
+                <!-- questions will be added here dynamically -->
+            </div>
+
+            <!-- add Question Button -->
+            <div class="mt-6">
+                <button id="add-question-btn"
+                    class="btn btn-outline btn-primary animate__animated animate__pulse animate__infinite">
+                    <i class="fas fa-plus-circle mr-2"></i> Add Question
+                </button>
+            </div>
+        </div>
+
+        <!-- publish button -->
+        <div class="flex justify-end">
+            <button id="publish-btn" class="btn btn-primary btn-wide animate__animated animate__pulse">
+                <i class="fas fa-paper-plane mr-2"></i> Publish Quiz
+            </button>
+        </div>
+    </div>
+
+    <!-- question template -->
+    <template id="question-template">
+        <div
+            class="question-card mb-6 p-4 border border-gray-200 rounded-lg bg-base-100 shadow-sm hover:shadow-md transition-all duration-200">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-medium">Question <span class="question-number">1</span></h3>
+                    <input type="hidden" class="question-id" value="">
+                </div>
+                <div class="flex space-x-2">
+                    <div class="form-control w-24">
+                        <label class="label">
+                            <span class="label-text">Marks</span>
+                        </label>
+                        <input type="number" min="1" class="input input-bordered input-sm question-marks" value="1">
+                    </div>
+                    <button class="delete-question btn btn-circle btn-sm btn-ghost text-error">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="label">
+                    <span class="label-text">Question Text *</span>
+                </label>
+                <input type="text" class="question-text input input-bordered w-full" placeholder="Enter your question">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="label">
+                        <span class="label-text">Answer Type</span>
+                    </label>
+                    <select class="answer-type select select-bordered w-full">
+                        <option value="text">Text Answer</option>
+                        <option value="number">Number Answer</option>
+                        <option value="single">Single Choice</option>
+                        <option value="multiple">Multiple Choice</option>
+                        <option value="boolean">True/False</option>
+                    </select>
+                </div>
+                <div class="question-time-limit hidden">
+                    <label class="label">
+                        <span class="label-text">Time Limit (seconds)</span>
+                    </label>
+                    <input type="number" min="0" class="time-limit input input-bordered w-full"
+                        placeholder="0 for no limit">
+                </div>
+            </div>
+
+            <!-- Answer Options Container -->
+            <div class="answer-options-container mt-4">
+                <!-- Options will be added here based on answer type -->
+            </div>
+        </div>
+    </template>
+
+    <!-- Option Template (Hidden) -->
+    <template id="option-template">
+        <div class="option-item flex items-center mb-2">
+            <input type="checkbox" class="checkbox correct-option mr-2" style="display: none;">
+            <input type="text" class="option-text input input-bordered flex-grow" placeholder="Option text">
+            <button class="delete-option btn btn-circle btn-sm btn-ghost text-error ml-2">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </template>
+
+    <!-- Add Option Button Template (Hidden) -->
+    <template id="add-option-btn-template">
+        <button class="add-option-btn btn btn-sm btn-outline btn-primary mt-2">
+            <i class="fas fa-plus mr-1"></i> Add Option
+        </button>
+    </template>
+
+    <script src="scripts/main.js"></script>
+    <script src="scripts/db.js"></script>
+</body>
+
+</html>

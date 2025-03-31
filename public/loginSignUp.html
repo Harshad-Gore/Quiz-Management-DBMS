@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizBuster | Authentication</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8" style="margin: 100px 0 100px 0;">
+        <!-- Toggle between Login/Signup -->
+        <div class="flex mb-8 border-b">
+            <button id="login-tab" class="flex-1 py-2 font-medium text-center border-b-2 border-blue-500 text-blue-600">
+                Login
+            </button>
+            <button id="signup-tab" class="flex-1 py-2 font-medium text-center text-gray-500">
+                Sign Up
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Login to your account</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="login-email" class="block text-gray-700 mb-2">Email</label>
+                    <input type="email" id="login-email" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block text-gray-700 mb-2">Password</label>
+                    <input type="password" id="login-password" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                    Login
+                </button>
+            </form>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signup-form" class="hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Create new account</h2>
+            <form id="signupForm">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="first-name" class="block text-gray-700 mb-2">First Name*</label>
+                        <input type="text" id="first-name" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="last-name" class="block text-gray-700 mb-2">Last Name*</label>
+                        <input type="text" id="last-name" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 mb-2">Personal Email*</label>
+                    <input type="email" id="email" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="mb-4">
+                    <label for="institution-email" class="block text-gray-700 mb-2">School/College Email*</label>
+                    <input type="email" id="institution-email" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-sm text-gray-500 mt-1">Must be a valid institutional email</p>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="block text-gray-700 mb-2">Password*</label>
+                    <input type="password" id="password" required minlength="8"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-sm text-gray-500 mt-1">Minimum 8 characters</p>
+                </div>
+
+                <div class="mb-4">
+                    <label for="confirm-password" class="block text-gray-700 mb-2">Confirm Password*</label>
+                    <input type="password" id="confirm-password" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="mb-4">
+                    <label for="department" class="block text-gray-700 mb-2">Department*</label>
+                    <select id="department" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select Department</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Electrical Engineering">Electrical Engineering</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Arts">Arts</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">You are a*</label>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="role" value="student" checked class="form-radio text-blue-600">
+                            <span class="ml-2">Student</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="role" value="teacher" class="form-radio text-blue-600">
+                            <span class="ml-2">Teacher</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Student Specific Fields -->
+                <div id="student-fields">
+                    <div class="mb-4">
+                        <label for="prn" class="block text-gray-700 mb-2">PRN Number*</label>
+                        <input type="text" id="prn" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">Permanent Registration Number</p>
+                    </div>
+                </div>
+
+                <!-- Teacher Specific Fields -->
+                <div id="teacher-fields" class="hidden">
+                    <div class="mb-4">
+                        <label for="teacher-id" class="block text-gray-700 mb-2">Teacher ID*</label>
+                        <input type="text" id="teacher-id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <p class="text-sm text-gray-500 mt-1">Your institutional teacher ID</p>
+                    </div>
+                    <div class="mb-4">
+                        <label for="designation" class="block text-gray-700 mb-2">Designation</label>
+                        <input type="text" id="designation"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                    Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Toggle between login and signup forms
+        document.getElementById('login-tab').addEventListener('click', () => {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('login-tab').classList.add('border-blue-500', 'text-blue-600');
+            document.getElementById('login-tab').classList.remove('text-gray-500');
+            document.getElementById('signup-tab').classList.remove('border-blue-500', 'text-blue-600');
+            document.getElementById('signup-tab').classList.add('text-gray-500');
+        });
+
+        document.getElementById('signup-tab').addEventListener('click', () => {
+            document.getElementById('signup-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-tab').classList.add('border-blue-500', 'text-blue-600');
+            document.getElementById('signup-tab').classList.remove('text-gray-500');
+            document.getElementById('login-tab').classList.remove('border-blue-500', 'text-blue-600');
+            document.getElementById('login-tab').classList.add('text-gray-500');
+        });
+
+        // Toggle student/teacher fields
+        document.querySelectorAll('input[name="role"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'student') {
+                    document.getElementById('student-fields').classList.remove('hidden');
+                    document.getElementById('teacher-fields').classList.add('hidden');
+                    document.getElementById('prn').required = true;
+                    document.getElementById('teacher-id').required = false;
+                } else {
+                    document.getElementById('teacher-fields').classList.remove('hidden');
+                    document.getElementById('student-fields').classList.add('hidden');
+                    document.getElementById('teacher-id').required = true;
+                    document.getElementById('prn').required = false;
+                }
+            });
+        });
+        
+    </script>
+    <script src="scripts/accounts.js"></script>
+</body>
+
+</html>
