@@ -132,26 +132,38 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                <!-- Replace the statistics cards section with: -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
                     <div class="bg-white rounded-lg p-4 shadow-sm">
                         <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-green-100 text-green-600 mr-3">
+                            <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-3">
                                 <i class="fas fa-poll"></i>
                             </div>
                             <div>
-                                <div class="text-gray-500 text-sm">Quizzes Created</div>
-                                <div id="quizzes-count" class="text-2xl font-bold">12</div>
+                                <div class="text-gray-500 text-sm">Total Quizzes</div>
+                                <div id="quizzes-count" class="text-2xl font-bold">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 text-green-600 mr-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div>
+                                <div class="text-gray-500 text-sm">Published</div>
+                                <div id="published-quizzes" class="text-2xl font-bold">0</div>
                             </div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg p-4 shadow-sm">
                         <div class="flex items-center">
                             <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-3">
-                                <i class="fas fa-clipboard-check"></i>
+                                <i class="fas fa-star"></i>
                             </div>
                             <div>
-                                <div class="text-gray-500 text-sm">Quizzes Taken</div>
-                                <div id="quizzes-taken" class="text-2xl font-bold">24</div>
+                                <div class="text-gray-500 text-sm">Total Marks</div>
+                                <div id="total-marks" class="text-2xl font-bold">0</div>
                             </div>
                         </div>
                     </div>
@@ -161,17 +173,17 @@
                                 <i class="fas fa-trophy"></i>
                             </div>
                             <div>
-                                <div class="text-gray-500 text-sm">Average Score</div>
-                                <div id="average-score" class="text-2xl font-bold">85%</div>
+                                <div class="text-gray-500 text-sm">Avg. Score</div>
+                                <div id="average-score" class="text-2xl font-bold">N/A</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Recent Activity Section -->
+            <!-- Update recent submissions section -->
             <div class="mb-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Submissions</h2>
                 <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -181,24 +193,25 @@
                                     Quiz</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date</th>
-                                <th
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Type</th>
+                                    Student</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Score</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status</th>
+                                    Submitted</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="recent-activity" class="bg-white divide-y divide-gray-200">
-                            <!-- Activity items will be loaded here -->
+                        <tbody id="recent-submissions" class="bg-white divide-y divide-gray-200">
+                            <!-- Submissions will be loaded here -->
                         </tbody>
                     </table>
                 </div>
             </div>
+
 
             <!-- Upcoming Quizzes (for students) -->
             <div id="upcoming-quizzes" class="mb-8 hidden">
@@ -211,33 +224,14 @@
                 </div>
             </div>
 
-            <!-- Recent Quizzes (for teachers) -->
-            <div id="recent-quizzes">
+            <!-- Update recent quizzes section -->
+            <div id="recent-quizzes-section">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-bold text-gray-800">Your Recent Quizzes</h2>
                     <a href="my_quizzes.html" class="text-indigo-600 hover:text-indigo-800 text-sm">View All</a>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Quiz cards will be loaded here -->
-                    <div class="border rounded-lg p-4 hover:shadow-md transition">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold">Basic Mathematics</h3>
-                            <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">Active</span>
-                        </div>
-                        <p class="text-sm text-gray-600 mb-3">20 Questions • 30 Marks</p>
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-500">Created: 2 days ago</span>
-                            <div class="flex space-x-2">
-                                <button class="text-indigo-600 hover:text-indigo-800">
-                                    <i class="fas fa-chart-bar"></i>
-                                </button>
-                                <button class="text-indigo-600 hover:text-indigo-800">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- More quiz cards... -->
+                <div id="recent-quizzes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Quizzes will be loaded here -->
                 </div>
             </div>
         </div>
@@ -263,118 +257,6 @@
             if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !e.target.closest('#toggle-sidebar')) {
                 sidebar.classList.remove('sidebar-active');
             }
-        });
-
-        // Load user data (in a real app, this would come from an API)
-        function loadUserData() {
-            // Simulate API call
-            setTimeout(() => {
-                const userData = {
-                    uniqueId: 'user-' + Math.random().toString(36).substr(2, 8),
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    role: 'teacher',
-                    department: 'Computer Science',
-                    quizzesCreated: 12,
-                    quizzesTaken: 24,
-                    averageScore: '85%'
-                };
-
-                // Update profile sections
-                document.getElementById('user-initials').textContent =
-                    userData.firstName.charAt(0) + userData.lastName.charAt(0);
-                document.getElementById('user-name').textContent =
-                    `${userData.firstName} ${userData.lastName}`;
-                document.getElementById('user-role').textContent =
-                    userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
-                document.getElementById('user-id').textContent = userData.uniqueId;
-
-                document.getElementById('profile-initials').textContent =
-                    userData.firstName.charAt(0) + userData.lastName.charAt(0);
-                document.getElementById('profile-name').textContent =
-                    `${userData.firstName} ${userData.lastName}`;
-                document.getElementById('profile-role').textContent =
-                    userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
-                document.getElementById('profile-id').textContent = `ID: ${userData.uniqueId}`;
-                document.getElementById('profile-department').textContent = userData.department;
-
-                document.getElementById('quizzes-count').textContent = userData.quizzesCreated;
-                document.getElementById('quizzes-taken').textContent = userData.quizzesTaken;
-                document.getElementById('average-score').textContent = userData.averageScore;
-
-                // Show/hide sections based on role
-                if (userData.role === 'student') {
-                    document.getElementById('upcoming-quizzes').classList.remove('hidden');
-                    document.getElementById('recent-quizzes').classList.add('hidden');
-                } else {
-                    document.getElementById('upcoming-quizzes').classList.add('hidden');
-                    document.getElementById('recent-quizzes').classList.remove('hidden');
-                }
-            }, 500);
-        }
-
-        // Load recent activity
-        function loadRecentActivity() {
-            const activityData = [
-                {
-                    quiz: 'Basic Mathematics',
-                    date: '2023-05-15',
-                    type: 'Exam',
-                    score: '18/20',
-                    status: 'Completed'
-                },
-                {
-                    quiz: 'Science Quiz',
-                    date: '2023-05-10',
-                    type: 'Practice',
-                    score: '15/15',
-                    status: 'Completed'
-                },
-                {
-                    quiz: 'History Test',
-                    date: '2023-05-05',
-                    type: 'Exam',
-                    score: '22/25',
-                    status: 'Completed'
-                }
-            ];
-
-            const activityTable = document.getElementById('recent-activity');
-            activityData.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-indigo-600">${item.quiz}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.date}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${item.type === 'Exam' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
-                            ${item.type}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${item.score}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            ${item.status}
-                        </span>
-                    </td>
-                `;
-                activityTable.appendChild(row);
-            });
-        }
-
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function () {
-            loadUserData();
-            loadRecentActivity();
-
-            // Logout button
-            document.getElementById('logout-btn').addEventListener('click', function () {
-                // In a real app, this would clear the auth token and redirect
-                alert('You have been logged out');
-                window.location.href = 'login.html';
-            });
         });
     </script>
     <script src="scripts/dashboard.js"></script>
