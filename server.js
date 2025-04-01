@@ -160,32 +160,10 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-
-// Middleware to verify JWT and check teacher role
-const authenticateTeacher = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ success: false, message: 'No token provided' });
-        }
-
-        const decoded = jwt.verify(token, JWT_SECRET);
-        if (decoded.role !== 'teacher') {
-            return res.status(403).json({ success: false, message: 'Access denied' });
-        }
-
-        req.user = decoded;
-        next();
-    } catch (error) {
-        console.error('Authentication error:', error);
-        res.status(401).json({ success: false, message: 'Invalid token' });
-    }
-};
-
 // Get teacher dashboard data
-app.get('/api/teacher/dashboard', authenticateTeacher, async (req, res) => {
+app.get('/api/teacher/dashboard', async (req, res) => {
     try {
-        const teacherId = req.user.id;
+        const teacherId = req.query.teacherId;
 
         // Get teacher info
         const [teacher] = await pool.query(`
@@ -252,12 +230,12 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/teachers_dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'teacher-dashboard.html'));
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
   
-  app.get('/student-dashboard.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'student-dashboard.html'));
+  app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
 app.listen(PORT, () => {

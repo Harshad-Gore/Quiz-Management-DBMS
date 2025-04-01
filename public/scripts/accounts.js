@@ -24,9 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
           
           // Redirect based on role
           if (data.user.role === 'teacher') {
-            window.location.href = 'teacher-dashboard.html';
+            window.location.href = 'index.html';
           } else {
-            window.location.href = 'student-dashboard.html';
+            window.location.href = 'index.html';
           }
         } else {
           alert(data.message || 'Login failed');
@@ -78,9 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
           
           // Redirect based on role
           if (data.user.role === 'teacher') {
-            window.location.href = 'teacher-dashboard.html';
+            window.location.href = 'index.html';
           } else {
-            window.location.href = 'student-dashboard.html';
+            window.location.href = 'index.html';
           }
         } else {
           alert(data.message || 'Signup failed');
