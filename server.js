@@ -42,6 +42,8 @@ app.post('/api/login', async (req, res) => {
 
         const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
 
+        // const user = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+
         if (users.length === 0) {
             return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }

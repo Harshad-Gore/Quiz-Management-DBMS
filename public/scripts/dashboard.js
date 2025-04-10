@@ -182,6 +182,8 @@ function initSidebar() {
   document.getElementById('logout-btn').addEventListener('click', function () {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.clear();
     window.location.href = 'loginSignUp.html';
+    
   });
 }
