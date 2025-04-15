@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.user.role === 'teacher') {
             window.location.href = 'index.html';
           } else {
-            window.location.href = 'index.html';
+            window.location.href = 'student-dashboard.html';
           }
         } else {
           alert(data.message || 'Login failed');
