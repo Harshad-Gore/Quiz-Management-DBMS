@@ -228,6 +228,63 @@ app.get('/api/teacher/dashboard', async (req, res) => {
     }
 });
 
+// Get student dashboard data
+app.get('/api/student/dashboard', async (req, res) => {
+    try {
+        const studentId = req.query.studentId;
+
+        // Get student info
+        const [student] = await pool.query(`
+        SELECT u.*, s.prn_number, s.enrollment_date 
+        FROM users u
+        JOIN students s ON u.id = s.user_id
+        WHERE u.id = ?
+      `, [studentId]);
+
+        if (student.length === 0) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        // Get quiz statistics
+        const [quizStats] = await pool.query(`
+        SELECT 
+          COUNT(*) as total_quizzes,
+          SUM(is_published) as published_quizzes,
+          SUM(total_marks) as total_marks_created,
+          AVG(total_score) as average_score
+        FROM quizzes q
+        JOIN responses r ON q.id = r.quiz_id
+        WHERE r.user_id = ?
+      `, [studentId]);
+
+        // Get recent quizzes taken by the student
+        const [recentQuizzes] = await pool.query(`
+        SELECT q.id, q.title, q.description, r.total_score, r.completed_at
+        FROM quizzes q
+        JOIN responses r ON q.id = r.quiz_id
+        WHERE r.user_id = ?
+        ORDER BY r.completed_at DESC
+        LIMIT 5
+      `, [studentId]);
+
+        res.json({
+            success: true,
+            student: student[0],
+            stats: {
+                totalQuizzes: quizStats[0].total_quizzes || 0,
+                publishedQuizzes: quizStats[0].published_quizzes || 0,
+                totalMarksCreated: quizStats[0].total_marks_created || 0,
+                averageScore: quizStats[0].average_score || 0
+            },
+            recentQuizzes
+        });
+
+    } catch (error) {
+        console.error('Dashboard error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
