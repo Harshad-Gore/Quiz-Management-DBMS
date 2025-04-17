@@ -1,3 +1,5 @@
+import { saveQuiz } from './db.js';
+
 document.addEventListener('DOMContentLoaded', function () {
     // DOM Elements
     const questionsContainer = document.getElementById('questions-container');
@@ -189,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Publish quiz
-    function publishQuiz() {
+    async function publishQuiz() {
         const quizTitle = document.getElementById('quiz-title').value;
         const quizDescription = document.getElementById('quiz-description').value;
         const quizId = currentQuizId;
@@ -260,27 +262,33 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        const userData = localStorage.getItem('user');
+
+        const user = JSON.parse(userData);
+
+        const userId = user.id;
+
         const quizData = {
             id: quizId,
             title: quizTitle,
             description: quizDescription,
             createdAt: new Date().toISOString(),
             questions: questions,
-            totalMarks: questions.reduce((sum, q) => sum + q.marks, 0)
+            totalMarks: questions.reduce((sum, q) => sum + q.marks, 0),
+            createdBy: userId
         };
 
         console.log('Quiz data to save:', quizData);
 
-        // Save to database
-        saveQuiz(quizData)
-            .then(response => {
-                showAlert('Quiz published successfully!', 'success');
-                // You might want to redirect or reset the form here
-            })
-            .catch(error => {
-                console.error('Error publishing quiz:', error);
-                showAlert('Error publishing quiz. Please try again.', 'error');
-            });
+        try {
+            const response = await saveQuiz(quizData);
+            showAlert('Quiz published successfully!', 'success');
+            // Redirect to dashboard after successful quiz creation
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('Error publishing quiz:', error);
+            showAlert('Error publishing quiz. Please try again.', 'error');
+        }
     }
 
     // Show alert message

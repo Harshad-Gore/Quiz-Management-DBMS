@@ -4,12 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizBuster | Dashboard</title>
+    <title>QuizBuster | Student Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #f43f5e;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+
         .sidebar {
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-collapsed {
@@ -21,187 +41,448 @@
         }
 
         .main-content {
-            transition: margin-left 0.3s;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sidebar-collapsed+.main-content {
             margin-left: 80px;
         }
+
+        .card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .quiz-card {
+            border-left: 4px solid var(--primary);
+        }
+
+        .timer {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #f43f5e, #f97316);
+            color: white;
+        }
+
+        .nav-item {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-ring {
+            transition: stroke-dashoffset 0.5s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .avatar {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+        }
+
+        .search-input {
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        .result-card {
+            border-left: 4px solid;
+        }
+
+        .correct-answer {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid var(--success);
+        }
+
+        .wrong-answer {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--danger);
+        }
+
+        .question-card {
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .modal-content {
+            animation: modalEnter 0.3s ease-out;
+        }
+
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex">
+<body class="bg-gray-50 min-h-screen flex">
     <!-- Sidebar -->
-    <div class="sidebar bg-indigo-800 text-white w-64 min-h-screen fixed flex flex-col">
+    <div class="sidebar text-white w-64 min-h-screen fixed flex flex-col z-10">
         <div class="p-4 flex items-center justify-between border-b border-indigo-700">
             <div class="flex items-center">
-                <i class="fas fa-poll text-2xl mr-2"></i>
-                <span class="sidebar-text text-xl font-bold">QuizBuster</span>
+                <i class="fas fa-poll text-2xl mr-3 text-indigo-200"></i>
+                <span class="sidebar-text text-xl font-bold text-white">QuizBuster</span>
             </div>
-            <button id="toggle-sidebar" class="text-white focus:outline-none">
+            <button id="toggle-sidebar" class="text-indigo-200 hover:text-white focus:outline-none">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
 
         <div class="p-4 border-b border-indigo-700 flex items-center">
-            <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
-                <span id="user-initials" class="font-bold">JD</span>
+            <div class="w-10 h-10 rounded-full avatar flex items-center justify-center">
+                <span id="user-initials" class="font-bold text-white"></span>
             </div>
             <div class="ml-3 sidebar-text">
-                <div id="user-name" class="font-medium">Your Name</div>
-                <div id="user-role" class="text-xs text-indigo-300">Teacher</div>
-                <div id="user-id" class="text-xs text-indigo-300">user-abc123</div>
+                <div id="user-name" class="font-medium text-white"></div>
+                <div id="user-role" class="text-xs text-indigo-200">Student</div>
+                <div id="user-id" class="text-xs text-indigo-200"></div>
             </div>
         </div>
 
-        <nav class="flex-1 p-4">
+        <nav class="flex-1 p-4 overflow-y-auto">
             <ul>
                 <li class="mb-2">
-                    <a href="#" class="flex items-center p-2 rounded hover:bg-indigo-700 bg-indigo-700">
-                        <i class="fas fa-home mr-3"></i>
-                        <span class="sidebar-text">Dashboard</span>
+                    <a href="#" id="dashboard-link" class="nav-item active flex items-center p-3">
+                        <i class="fas fa-home mr-3 text-indigo-200"></i>
+                        <span class="sidebar-text text-white">Dashboard</span>
                     </a>
                 </li>
                 <li class="mb-2">
-                    <a href="#" class="flex items-center p-2 rounded hover:bg-indigo-700">
-                        <i class="fas fa-chart-bar mr-3"></i>
-                        <span class="sidebar-text">Results</span>
+                    <a href="#" id="quizzes-link" class="nav-item flex items-center p-3">
+                        <i class="fas fa-question-circle mr-3 text-indigo-200"></i>
+                        <span class="sidebar-text text-white">Available Quizzes</span>
                     </a>
                 </li>
                 <li class="mb-2">
-                    <a href="#" class="flex items-center p-2 rounded hover:bg-indigo-700">
-                        <i class="fas fa-cog mr-3"></i>
-                        <span class="sidebar-text">Settings</span>
+                    <a href="#" id="results-link" class="nav-item flex items-center p-3">
+                        <i class="fas fa-chart-bar mr-3 text-indigo-200"></i>
+                        <span class="sidebar-text text-white">Results</span>
                     </a>
                 </li>
             </ul>
         </nav>
 
         <div class="p-4 border-t border-indigo-700">
-            <button id="logout-btn" class="flex items-center p-2 rounded hover:bg-indigo-700 w-full">
-                <i class="fas fa-sign-out-alt mr-3"></i>
-                <span class="sidebar-text">Logout</span>
+            <button id="logout-btn" class="nav-item flex items-center p-3 w-full text-left">
+                <i class="fas fa-sign-out-alt mr-3 text-indigo-200"></i>
+                <span class="sidebar-text text-white">Logout</span>
             </button>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="flex-1 main-content ml-64 p-8">
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <div class="flex items-center">
-                    <div class="relative">
-                        <input type="text" placeholder="Search..."
-                            class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="block">
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800">Student Dashboard</h1>
+                        <p class="text-slate-600">Welcome back! Here's your learning overview</p>
                     </div>
-                    <button class="ml-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-                        <i class="fas fa-bell"></i>
-                    </button>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input type="text" placeholder="Search..."
+                                class="search-input pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 w-64">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <button class="relative p-2 text-gray-600 hover:text-indigo-600 focus:outline-none">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Profile Card -->
+                <div class="card bg-gradient-to-r from-indigo-50 to-blue-50 p-6 mb-8">
+                    <div class="flex flex-col md:flex-row items-center justify-between">
+                        <div class="flex items-center mb-4 md:mb-0">
+                            <div class="w-20 h-20 rounded-full avatar flex items-center justify-center text-white text-3xl font-bold mr-4">
+                                <span id="profile-initials"></span>
+                            </div>
+                            <div>
+                                <h2 id="profile-name" class="text-2xl font-bold text-slate-800"></h2>
+                                <div class="flex flex-wrap items-center gap-2 mt-1">
+                                    <span class="badge bg-indigo-100 text-indigo-800">Student</span>
+                                    <span id="profile-id" class="text-sm text-slate-600"></span>
+                                    <span id="profile-department" class="text-sm text-slate-600"></span>
+                                    <span id="prn-display" class="text-sm text-slate-600"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 border border-indigo-500 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+                                <i class="fas fa-user-edit mr-2"></i>Edit Profile
+                            </button>
+                            <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+                        <div class="card bg-white p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-4">
+                                    <i class="fas fa-poll text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-sm">Quizzes Taken</div>
+                                    <div id="quizzes-taken" class="text-2xl font-bold text-slate-800">0</div>
+                                    <div class="text-xs text-gray-400 mt-1">+0% from last week</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-white p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                                    <i class="fas fa-check-circle text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-sm">Highest Score</div>
+                                    <div id="highest-score" class="text-2xl font-bold text-slate-800">0</div>
+                                    <div class="text-xs text-gray-400 mt-1">Your personal best</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-white p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                    <i class="fas fa-star text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-sm">Average Score</div>
+                                    <div id="average-score" class="text-2xl font-bold text-slate-800">0</div>
+                                    <div class="text-xs text-gray-400 mt-1">Class average: 0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-white p-5">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                                    <i class="fas fa-trophy text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-gray-500 text-sm">Rank</div>
+                                    <div id="rank" class="text-2xl font-bold text-slate-800">N/A</div>
+                                    <div class="text-xs text-gray-400 mt-1">Top 0% of students</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card bg-white p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-slate-800">Recent Quiz Attempts</h2>
+                        <button class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                            View All <i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                    <div id="recent-attempts" class="space-y-4">
+                        <!-- Skeleton loading state -->
+                        <div class="skeleton h-20 rounded-lg"></div>
+                        <div class="skeleton h-20 rounded-lg"></div>
+                        <div class="skeleton h-20 rounded-lg"></div>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Profile Card -->
-            <div class="bg-indigo-50 rounded-lg p-6 mb-8">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div
-                            class="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold mr-4">
-                            <span id="profile-initials">JD</span>
-                        </div>
-                        <div>
-                            <h2 id="profile-name" class="text-xl font-bold">Your Name</h2>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <span id="profile-role"
-                                    class="mr-2 px-2 py-1 bg-indigo-100 text-indigo-800 rounded">Teacher</span>
-                                <span id="profile-id" class="mr-2">ID: user-abc123</span>
-                                <span id="profile-department">Computer Science</span>
-                                <span id="teacher-id-display" class="ml-2">Teacher ID: Not specified</span>
-                                <span id="designation-display" class="ml-2">Designation: Not specified</span>
-                            </div>
-                        </div>
+        <!-- Available Quizzes Section -->
+        <div id="quizzes-section" class="hidden">
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800">Available Quizzes</h1>
+                        <p class="text-slate-600">Test your knowledge with these quizzes</p>
                     </div>
-                    <button
-                        class="bg-white text-indigo-600 px-4 py-2 rounded-lg border border-indigo-300 hover:bg-indigo-50">
-                        Edit Profile
-                    </button>
+                    <div class="relative">
+                        <input type="text" id="quiz-search" placeholder="Search quizzes..."
+                            class="search-input pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 w-64">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
                 </div>
 
-                <!-- Replace the statistics cards section with: -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-                    <div class="bg-white rounded-lg p-4 shadow-sm">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 mr-3">
-                                <i class="fas fa-poll"></i>
-                            </div>
-                            <div>
-                                <div class="text-gray-500 text-sm">Total Quizzes</div>
-                                <div id="quizzes-count" class="text-2xl font-bold">0</div>
-                            </div>
+                <div id="available-quizzes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Skeleton loading state -->
+                    <div class="card skeleton h-64 rounded-lg"></div>
+                    <div class="card skeleton h-64 rounded-lg"></div>
+                    <div class="card skeleton h-64 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden">
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800">Your Results</h1>
+                        <p class="text-slate-600">Review your quiz performance</p>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="results-search" placeholder="Search results..."
+                            class="search-input pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 w-64">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <div id="results-list" class="space-y-4">
+                    <!-- Skeleton loading state -->
+                    <div class="card skeleton h-24 rounded-lg"></div>
+                    <div class="card skeleton h-24 rounded-lg"></div>
+                    <div class="card skeleton h-24 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Attempt Modal -->
+        <div id="quiz-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 id="quiz-title" class="text-2xl font-bold text-slate-800"></h2>
+                    <div class="flex items-center space-x-4">
+                        <div id="quiz-timer" class="px-4 py-2 rounded-full timer font-bold"></div>
+                        <button id="close-quiz-modal" class="text-gray-500 hover:text-gray-700 text-xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6 overflow-y-auto" style="max-height: 70vh;">
+                    <div id="quiz-instructions" class="mb-6 p-5 bg-blue-50 rounded-xl border border-blue-100">
+                        <h3 class="font-bold text-lg mb-3 text-blue-800">Instructions:</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-1 mr-2"></i>
+                                <span>Read each question carefully before answering.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-1 mr-2"></i>
+                                <span>Some questions may have multiple correct answers.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-1 mr-2"></i>
+                                <span>You can't go back to previous questions after submitting.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-1 mr-2"></i>
+                                <span>The quiz will auto-submit when time expires.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <form id="quiz-form">
+                        <div id="quiz-questions" class="space-y-8">
+                            <!-- Questions will be inserted here -->
+                        </div>
+
+                        <div class="mt-8 flex justify-end space-x-4">
+                            <button type="button" id="cancel-quiz" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" id="submit-quiz" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                                <i class="fas fa-paper-plane mr-2"></i> Submit Quiz
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Detail Modal -->
+        <div id="result-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 id="result-quiz-title" class="text-2xl font-bold text-slate-800"></h2>
+                    <div class="flex items-center space-x-4">
+                        <div class="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-400 text-white rounded-full font-bold">
+                            Score: <span id="result-score"></span>/<span id="result-total"></span>
+                        </div>
+                        <button id="close-result-modal" class="text-gray-500 hover:text-gray-700 text-xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6 overflow-y-auto" style="max-height: 70vh;">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="card bg-white p-4 rounded-lg border border-gray-100">
+                            <div class="text-gray-500 text-sm">Date Taken</div>
+                            <div id="result-date" class="text-lg font-bold text-slate-800"></div>
+                        </div>
+                        <div class="card bg-white p-4 rounded-lg border border-gray-100">
+                            <div class="text-gray-500 text-sm">Time Spent</div>
+                            <div id="result-time" class="text-lg font-bold text-slate-800"></div>
+                        </div>
+                        <div class="card bg-white p-4 rounded-lg border border-gray-100">
+                            <div class="text-gray-500 text-sm">Percentage</div>
+                            <div id="result-percentage" class="text-lg font-bold text-slate-800"></div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-lg p-4 shadow-sm">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-green-100 text-green-600 mr-3">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div>
-                                <div class="text-gray-500 text-sm">Published</div>
-                                <div id="published-quizzes" class="text-2xl font-bold">0</div>
-                            </div>
-                        </div>
+
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Question Breakdown</h3>
+                    <div id="result-details" class="space-y-6">
+                        <!-- Result details will be inserted here -->
                     </div>
-                    <div class="bg-white rounded-lg p-4 shadow-sm">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-3">
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <div>
-                                <div class="text-gray-500 text-sm">Total Marks</div>
-                                <div id="total-marks" class="text-2xl font-bold">0</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-lg p-4 shadow-sm">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-3">
-                                <i class="fas fa-trophy"></i>
-                            </div>
-                            <div>
-                                <div class="text-gray-500 text-sm">Avg. Score</div>
-                                <div id="average-score" class="text-2xl font-bold">N/A</div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+
+                <div class="p-6 border-t flex justify-end">
+                    <button id="close-result-modal-btn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                        Close
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Toggle sidebar
-        document.getElementById('toggle-sidebar').addEventListener('click', function () {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('sidebar-active');
-            } else {
-                sidebar.classList.toggle('sidebar-collapsed');
-                mainContent.classList.toggle('ml-64');
-            }
-        });
-
-        // Close sidebar when clicking outside on smaller screens
-        document.addEventListener('click', function (e) {
-            const sidebar = document.querySelector('.sidebar');
-            if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !e.target.closest('#toggle-sidebar')) {
-                sidebar.classList.remove('sidebar-active');
-            }
-        });
-    </script>
-    <script src="scripts/studentDash.js"></script>
+    <script src="scripts/studentDashboard.js"></script>
 </body>
 
 </html>

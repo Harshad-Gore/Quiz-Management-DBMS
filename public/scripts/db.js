@@ -1,95 +1,28 @@
-// db.js - MySQL2 Database Interactions for Quiz Management System
-const mysql = require('mysql2/promise');
-require('dotenv').config();
-
-// Database connection pool
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'Harsh@2004',
-    database: process.env.DB_NAME || 'quiz_management_system',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+// db.js - API calls for Quiz Management System
 
 /**
  * Save a complete quiz to the database
  * @param {Object} quizData - The quiz data to save
  * @returns {Promise<Object>} - Result of the operation
  */
-async function saveQuiz(quizData) {
-    let connection;
+export async function saveQuiz(quizData) {
     try {
-        connection = await pool.getConnection();
-        
-        // Begin transaction
-        await connection.beginTransaction();
+        const response = await fetch('/api/quizzes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(quizData)
+        });
 
-        // 1. Save quiz metadata
-        await connection.execute(
-            `INSERT INTO quizzes (id, title, description, created_at, total_marks)
-             VALUES (?, ?, ?, ?, ?)`,
-            [
-                quizData.id,
-                quizData.title,
-                quizData.description,
-                quizData.createdAt,
-                quizData.totalMarks
-            ]
-        );
-
-        // 2. Save questions
-        for (const question of quizData.questions) {
-            await connection.execute(
-                `INSERT INTO questions (id, quiz_id, question_text, answer_type, marks, time_limit)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
-                [
-                    question.id,
-                    quizData.id,
-                    question.text,
-                    question.type,
-                    question.marks,
-                    question.timeLimit || 0
-                ]
-            );
-
-            // 3. Save options if this is a multiple/single choice question
-            if (question.options && question.options.length > 0) {
-                for (const option of question.options) {
-                    await connection.execute(
-                        `INSERT INTO options (question_id, option_text, is_correct)
-                         VALUES (?, ?, ?)`,
-                        [
-                            question.id,
-                            option.text,
-                            option.correct ? 1 : 0
-                        ]
-                    );
-                }
-            }
+        if (!response.ok) {
+            throw new Error('Failed to save quiz');
         }
 
-        // Commit transaction
-        await connection.commit();
-        
-        return {
-            success: true,
-            quizId: quizData.id,
-            message: 'Quiz saved successfully'
-        };
+        return await response.json();
     } catch (error) {
-        // Rollback transaction if there's an error
-        if (connection) await connection.rollback();
-        
-        console.error('Database error in saveQuiz:', error);
-        throw {
-            success: false,
-            message: 'Failed to save quiz',
-            error: error.message
-        };
-    } finally {
-        if (connection) connection.release();
+        console.error('Error saving quiz:', error);
+        throw error;
     }
 }
 
@@ -98,55 +31,18 @@ async function saveQuiz(quizData) {
  * @param {string} quizId - The quiz ID to retrieve
  * @returns {Promise<Object>} - The quiz data
  */
-async function getQuiz(quizId) {
-    let connection;
+export async function getQuiz(quizId) {
     try {
-        connection = await pool.getConnection();
-
-        // 1. Get quiz metadata
-        const [quizRows] = await connection.execute(
-            `SELECT * FROM quizzes WHERE id = ?`,
-            [quizId]
-        );
-
-        if (quizRows.length === 0) {
-            throw new Error('Quiz not found');
+        const response = await fetch(`/api/quizzes/${quizId}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to retrieve quiz');
         }
 
-        const quiz = quizRows[0];
-
-        // 2. Get all questions for this quiz
-        const [questionRows] = await connection.execute(
-            `SELECT * FROM questions WHERE quiz_id = ? ORDER BY id`,
-            [quizId]
-        );
-
-        // 3. Get options for each question
-        for (const question of questionRows) {
-            if (question.answer_type === 'single' || question.answer_type === 'multiple') {
-                const [optionRows] = await connection.execute(
-                    `SELECT * FROM options WHERE question_id = ?`,
-                    [question.id]
-                );
-                question.options = optionRows;
-            }
-        }
-
-        quiz.questions = questionRows;
-
-        return {
-            success: true,
-            quiz: quiz
-        };
+        return await response.json();
     } catch (error) {
-        console.error('Database error in getQuiz:', error);
-        throw {
-            success: false,
-            message: 'Failed to retrieve quiz',
-            error: error.message
-        };
-    } finally {
-        if (connection) connection.release();
+        console.error('Error getting quiz:', error);
+        throw error;
     }
 }
 
@@ -154,29 +50,18 @@ async function getQuiz(quizId) {
  * Get all quizzes (basic metadata only)
  * @returns {Promise<Array>} - Array of quizzes
  */
-async function getAllQuizzes() {
-    let connection;
+export async function getAllQuizzes() {
     try {
-        connection = await pool.getConnection();
+        const response = await fetch('/api/quizzes');
+        
+        if (!response.ok) {
+            throw new Error('Failed to retrieve quizzes');
+        }
 
-        const [quizzes] = await connection.execute(
-            `SELECT id, title, description, created_at, total_marks 
-             FROM quizzes ORDER BY created_at DESC`
-        );
-
-        return {
-            success: true,
-            quizzes: quizzes
-        };
+        return await response.json();
     } catch (error) {
-        console.error('Database error in getAllQuizzes:', error);
-        throw {
-            success: false,
-            message: 'Failed to retrieve quizzes',
-            error: error.message
-        };
-    } finally {
-        if (connection) connection.release();
+        console.error('Error getting quizzes:', error);
+        throw error;
     }
 }
 
@@ -185,38 +70,20 @@ async function getAllQuizzes() {
  * @param {string} quizId - The quiz ID to delete
  * @returns {Promise<Object>} - Result of the operation
  */
-async function deleteQuiz(quizId) {
-    let connection;
+export async function deleteQuiz(quizId) {
     try {
-        connection = await pool.getConnection();
-        await connection.beginTransaction();
-
-        // Cascading delete will handle questions and options
-        const [result] = await connection.execute(
-            `DELETE FROM quizzes WHERE id = ?`,
-            [quizId]
-        );
-
-        if (result.affectedRows === 0) {
-            throw new Error('Quiz not found');
+        const response = await fetch(`/api/quizzes/${quizId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete quiz');
         }
 
-        await connection.commit();
-        
-        return {
-            success: true,
-            message: 'Quiz deleted successfully'
-        };
+        return await response.json();
     } catch (error) {
-        if (connection) await connection.rollback();
-        console.error('Database error in deleteQuiz:', error);
-        throw {
-            success: false,
-            message: 'Failed to delete quiz',
-            error: error.message
-        };
-    } finally {
-        if (connection) connection.release();
+        console.error('Error deleting quiz:', error);
+        throw error;
     }
 }
 
@@ -225,24 +92,17 @@ async function deleteQuiz(quizId) {
  * @param {string} quizId - The quiz ID to get results for
  * @returns {Promise<Object>} - Quiz results data
  */
-async function getQuizResults(quizId) {
-    // Implementation would depend on your response tracking system
-    // This is just a placeholder structure
-    return {
-        success: true,
-        results: {
-            totalAttempts: 0,
-            averageScore: 0,
-            questionAnalytics: []
+export async function getQuizResults(quizId) {
+    try {
+        const response = await fetch(`/api/quizzes/${quizId}/results`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to get quiz results');
         }
-    };
-}
 
-module.exports = {
-    saveQuiz,
-    getQuiz,
-    getAllQuizzes,
-    deleteQuiz,
-    getQuizResults,
-    pool
-};
+        return await response.json();
+    } catch (error) {
+        console.error('Error getting quiz results:', error);
+        throw error;
+    }
+}
