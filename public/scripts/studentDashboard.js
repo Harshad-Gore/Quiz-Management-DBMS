@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quizzes-link').addEventListener('click', (e) => {
         e.preventDefault();
         showSection('quizzes-section');
-        loadAvailableQuizzes();
     });
 
     document.getElementById('results-link').addEventListener('click', (e) => {
@@ -105,11 +104,31 @@ function getInitials(firstName, lastName) {
 
 // Show specific section
 function showSection(sectionId) {
-    document.getElementById('dashboard-section').classList.add('hidden');
-    document.getElementById('quizzes-section').classList.add('hidden');
-    document.getElementById('results-section').classList.add('hidden');
+    // Hide all sections first
+    const sections = ['dashboard-section', 'quizzes-section', 'results-section'];
+    sections.forEach(id => {
+        const section = document.getElementById(id);
+        if (section) {
+            section.classList.add('hidden');
+        }
+    });
 
-    document.getElementById(sectionId).classList.remove('hidden');
+    // Show the requested section
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.remove('hidden');
+        
+        // If it's the quizzes section, wait for it to be visible
+        if (sectionId === 'quizzes-section') {
+            // Force a reflow to ensure the section is rendered
+            targetSection.offsetHeight;
+            
+            // Now load the quizzes
+            loadAvailableQuizzes();
+        }
+    } else {
+        console.error(`Section ${sectionId} not found`);
+    }
 
     // Update active link in sidebar
     document.querySelectorAll('nav a').forEach(link => {
@@ -373,218 +392,128 @@ function getScoreColor(percentage) {
 
 async function loadAvailableQuizzes() {
     try {
-        const container = document.getElementById('available-quizzes');
-        container.innerHTML = `
-            <div class="flex justify-center items-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500 mr-3"></div>
-                <span class="text-gray-600">Loading available quizzes...</span>
-            </div>
-        `;
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Authentication token not found');
+        }
 
-        const response = await fetch('http://localhost:3000/api/quizzes/available', {
+        const response = await fetch('/api/student/available-quizzes', {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
             }
         });
 
-        // First check if response is OK
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        // First check if the response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text);
+            throw new Error('Server returned non-JSON response');
         }
 
         const data = await response.json();
 
-        container.innerHTML = '';
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to load available quizzes');
+        }
 
-        if (!data.quizzes || data.quizzes.length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-8">
-                    <div class="inline-block p-4 bg-blue-50 rounded-full mb-3">
-                        <i class="fas fa-clipboard-list text-blue-500 text-2xl"></i>
-                    </div>
-                    <h3 class="text-lg font-medium text-gray-700">No quizzes available</h3>
-                    <p class="text-gray-500">Check back later or contact your instructor</p>
-                </div>
-            `;
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load available quizzes');
+        }
+
+        const quizzes = data.quizzes || [];
+        const container = document.getElementById('available-quizzes-container');
+        
+        if (!container) {
+            console.error('Quiz container not found');
             return;
         }
 
-        // Render quizzes
-        data.quizzes.forEach(quiz => {
+        container.innerHTML = '';
+
+        if (quizzes.length === 0) {
+            container.innerHTML = '<p class="text-center text-muted">No available quizzes at the moment.</p>';
+            return;
+        }
+
+        quizzes.forEach(quiz => {
             const quizCard = document.createElement('div');
-            quizCard.className = 'card quiz-card bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-all duration-200 mb-4';
+            quizCard.className = 'bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition mb-4 border border-gray-100';
             quizCard.innerHTML = `
-                <div class="flex flex-col h-full">
-                    <div class="flex justify-between items-start mb-3">
-                        <h3 class="font-bold text-lg text-gray-800">${quiz.title}</h3>
-                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                            ${quiz.total_marks} Marks
-                        </span>
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">${quiz.title}</h3>
+                        <p class="text-sm text-gray-500">
+                            <i class="fas fa-chalkboard-teacher mr-1"></i>
+                            By ${quiz.teacher_first_name} ${quiz.teacher_last_name}
+                        </p>
                     </div>
-                    <p class="text-gray-600 text-sm mb-4 flex-grow">${quiz.description || 'No description available'}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">Created: ${new Date(quiz.created_at).toLocaleDateString()}</span>
-                        <button onclick="startQuiz('${quiz.id}')" 
-                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
-                            <i class="fas fa-play mr-2"></i> Start Quiz
-                        </button>
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                        ${quiz.total_marks} Marks
+                    </span>
+                </div>
+                <p class="text-gray-600 mb-4">${quiz.description || 'No description provided'}</p>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm text-gray-500 gap-2">
+                    <div class="flex items-center">
+                        <i class="fas fa-building mr-1"></i>
+                        <span>Department: ${quiz.department}</span>
                     </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span>Time Limit: ${quiz.time_limit} minutes</span>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button 
+                        class="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition flex items-center justify-center"
+                        onclick="startQuiz('${quiz.id}')"
+                    >
+                        <i class="fas fa-play mr-2"></i>
+                        Start Quiz
+                    </button>
                 </div>
             `;
             container.appendChild(quizCard);
         });
-
     } catch (error) {
         console.error('Error loading available quizzes:', error);
-        container.innerHTML = `
-            <div class="text-center py-8">
-                <div class="inline-block p-4 bg-red-50 rounded-full mb-3">
-                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-medium text-gray-700">Error loading quizzes</h3>
-                <p class="text-gray-500 mb-4">${error.message}</p>
-                <button onclick="loadAvailableQuizzes()" 
-                        class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
-                    <i class="fas fa-sync-alt mr-2"></i> Try Again
-                </button>
-            </div>
-        `;
-    }
-}
-
-// Start quiz
-async function startQuiz(quizId) {
-    try {
-        // Show loading state
-        document.getElementById('quiz-questions').innerHTML = `
-            <div class="text-center py-8 text-gray-500">
-                <i class="fas fa-spinner fa-spin mr-2"></i> Loading quiz...
-            </div>
-        `;
-
-        document.getElementById('quiz-modal').classList.remove('hidden');
-
-        // Fetch quiz details
-        const response = await fetch(`http://localhost:3000/api/quizzes/${quizId}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch quiz details');
-        }
-
-        const quiz = await response.json();
-
-        // Set quiz title
-        document.getElementById('quiz-title').textContent = quiz.title;
-
-        // Initialize timer if quiz has time limit
-        let timeLeft = quiz.time_limit * 60 || 0; // Convert minutes to seconds
-        let timerInterval;
-
-        if (timeLeft > 0) {
-            document.getElementById('quiz-timer').classList.remove('hidden');
-            updateTimerDisplay(timeLeft);
-
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                updateTimerDisplay(timeLeft);
-
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    submitQuiz();
-                }
-            }, 1000);
-        } else {
-            document.getElementById('quiz-timer').classList.add('hidden');
-        }
-
-        // Render questions
-        const questionsContainer = document.getElementById('quiz-questions');
-        questionsContainer.innerHTML = '';
-
-        quiz.questions.forEach((question, index) => {
-            const questionElement = document.createElement('div');
-            questionElement.className = 'question p-4 border rounded-lg';
-            questionElement.dataset.questionId = question.id;
-            questionElement.dataset.answerType = question.answer_type;
-            questionElement.dataset.marks = question.marks;
-
-            let optionsHtml = '';
-
-            if (question.answer_type === 'single' || question.answer_type === 'multiple') {
-                question.options.forEach(option => {
-                    const inputType = question.answer_type === 'single' ? 'radio' : 'checkbox';
-                    optionsHtml += `
-                        <div class="flex items-center mb-2">
-                            <input type="${inputType}" id="option-${option.id}" name="question-${question.id}" 
-                                   value="${option.id}" class="mr-2">
-                            <label for="option-${option.id}">${option.option_text}</label>
-                        </div>
-                    `;
-                });
-            } else if (question.answer_type === 'boolean') {
-                optionsHtml = `
-                    <div class="flex items-center space-x-4">
-                        <div class="flex items-center">
-                            <input type="radio" id="true-${question.id}" name="question-${question.id}" 
-                                   value="true" class="mr-2">
-                            <label for="true-${question.id}">True</label>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="radio" id="false-${question.id}" name="question-${question.id}" 
-                                   value="false" class="mr-2">
-                            <label for="false-${question.id}">False</label>
-                        </div>
+        const container = document.getElementById('available-quizzes-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="inline-block p-4 bg-red-50 rounded-full mb-3">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
                     </div>
-                `;
-            } else {
-                // Text or number answer
-                const inputType = question.answer_type === 'number' ? 'number' : 'text';
-                optionsHtml = `
-                    <input type="${inputType}" name="question-${question.id}" 
-                           class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500">
-                `;
-            }
-
-            questionElement.innerHTML = `
-                <h3 class="font-bold mb-2">${index + 1}. ${question.question_text}</h3>
-                <div class="ml-4 mb-3 text-sm text-gray-500">${question.marks} mark(s)</div>
-                <div class="options ml-4">
-                    ${optionsHtml}
+                    <h3 class="text-lg font-medium text-gray-700">Error loading quizzes</h3>
+                    <p class="text-gray-500 mb-4">${error.message}</p>
+                    <button onclick="loadAvailableQuizzes()" 
+                            class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
+                        <i class="fas fa-sync-alt mr-2"></i> Try Again
+                    </button>
                 </div>
             `;
-
-            questionsContainer.appendChild(questionElement);
-        });
-
-        // Store quiz ID in the form for submission
-        document.getElementById('quiz-form').dataset.quizId = quiz.id;
-
-        // Clear timer when modal is closed
-        document.getElementById('close-quiz-modal').addEventListener('click', () => {
-            if (timerInterval) clearInterval(timerInterval);
-        });
-    } catch (error) {
-        console.error('Error starting quiz:', error);
-        document.getElementById('quiz-questions').innerHTML = `
-            <div class="text-center py-8 text-red-500">
-                <i class="fas fa-exclamation-circle mr-2"></i> Failed to load quiz
-            </div>
-        `;
+        }
     }
 }
 
-// Update timer display
-function updateTimerDisplay(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    document.getElementById('quiz-timer').textContent =
-        `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+// Function to start a quiz
+async function startQuiz(quizId) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.id) {
+            throw new Error('User not authenticated');
+        }
+
+        // Store quiz ID in session storage for the quiz page
+        sessionStorage.setItem('currentQuizId', quizId);
+        
+        // Redirect to quiz page
+        window.location.href = 'quiz.html';
+    } catch (error) {
+        console.error('Error starting quiz:', error);
+        alert('Failed to start quiz. Please try again.');
+    }
 }
 
 // Submit quiz
