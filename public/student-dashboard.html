@@ -135,6 +135,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -151,6 +152,7 @@
             0% {
                 background-position: 200% 0;
             }
+
             100% {
                 background-position: -200% 0;
             }
@@ -240,7 +242,8 @@
                 <div class="card bg-gradient-to-r from-indigo-50 to-blue-50 p-6 mb-8">
                     <div class="flex flex-col md:flex-row items-center justify-between">
                         <div class="flex items-center mb-4 md:mb-0">
-                            <div class="w-20 h-20 rounded-full avatar flex items-center justify-center text-white text-3xl font-bold mr-4">
+                            <div
+                                class="w-20 h-20 rounded-full avatar flex items-center justify-center text-white text-3xl font-bold mr-4">
                                 <span id="profile-initials"></span>
                             </div>
                             <div>
@@ -254,10 +257,12 @@
                             </div>
                         </div>
                         <div class="flex space-x-2">
-                            <button class="px-4 py-2 border border-indigo-500 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
+                            <button
+                                class="px-4 py-2 border border-indigo-500 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
                                 <i class="fas fa-user-edit mr-2"></i>Edit Profile
                             </button>
-                            <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                            <button
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
                                 <i class="fas fa-cog mr-2"></i>Settings
                             </button>
                         </div>
@@ -334,26 +339,12 @@
             </div>
         </div>
 
-        <!-- Available Quizzes Section -->
+        <!-- Quizzes Section -->
         <div id="quizzes-section" class="hidden">
-            <div class="mb-8">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 class="text-3xl font-bold text-slate-800">Available Quizzes</h1>
-                        <p class="text-slate-600">Test your knowledge with these quizzes</p>
-                    </div>
-                    <div class="relative">
-                        <input type="text" id="quiz-search" placeholder="Search quizzes..."
-                            class="search-input pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 w-64">
-                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    </div>
-                </div>
-
-                <div id="available-quizzes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Skeleton loading state -->
-                    <div class="card skeleton h-64 rounded-lg"></div>
-                    <div class="card skeleton h-64 rounded-lg"></div>
-                    <div class="card skeleton h-64 rounded-lg"></div>
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Available Quizzes</h2>
+                <div id="available-quizzes-container" class="space-y-4">
+                    <!-- Quizzes will be loaded here -->
                 </div>
             </div>
         </div>
@@ -424,10 +415,12 @@
                         </div>
 
                         <div class="mt-8 flex justify-end space-x-4">
-                            <button type="button" id="cancel-quiz" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <button type="button" id="cancel-quiz"
+                                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" id="submit-quiz" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                            <button type="submit" id="submit-quiz"
+                                class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
                                 <i class="fas fa-paper-plane mr-2"></i> Submit Quiz
                             </button>
                         </div>
@@ -437,12 +430,14 @@
         </div>
 
         <!-- Result Detail Modal -->
-        <div id="result-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div id="result-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
             <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
                 <div class="flex justify-between items-center p-6 border-b">
                     <h2 id="result-quiz-title" class="text-2xl font-bold text-slate-800"></h2>
                     <div class="flex items-center space-x-4">
-                        <div class="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-400 text-white rounded-full font-bold">
+                        <div
+                            class="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-400 text-white rounded-full font-bold">
                             Score: <span id="result-score"></span>/<span id="result-total"></span>
                         </div>
                         <button id="close-result-modal" class="text-gray-500 hover:text-gray-700 text-xl">
@@ -474,7 +469,8 @@
                 </div>
 
                 <div class="p-6 border-t flex justify-end">
-                    <button id="close-result-modal-btn" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                    <button id="close-result-modal-btn"
+                        class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
                         Close
                     </button>
                 </div>
