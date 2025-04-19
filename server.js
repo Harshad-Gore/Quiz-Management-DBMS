@@ -10,6 +10,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,7 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_PASSWORD || '4525',
     database: process.env.DB_NAME || 'quiz_management_system',
     waitForConnections: true,
     connectionLimit: 10,
@@ -841,153 +842,75 @@ app.get('/api/quizzes/available', authenticateToken, async (req, res) => {
 });
 
 // Submit quiz answers
-app.post('/api/quizzes/:quizId/submit', authenticateToken, async (req, res) => {
-    let connection;
+app.post('/api/student/submit-quiz', async (req, res) => {
     try {
-        connection = await pool.getConnection();
+        const { quiz_id, user_id, answers } = req.body;
+
+        const connection = await pool.getConnection();
         await connection.beginTransaction();
 
-        const { quizId } = req.params;
-        const { answers } = req.body;
-        const userId = req.user.id;
+        try {
+            // Create response record
+            const [responseResult] = await connection.query(
+                `INSERT INTO responses (quiz_id, user_id, completed_at) 
+                 VALUES (?, ?, NOW())`,
+                [quiz_id, user_id]
+            );
 
-        // 1. Get quiz details to calculate total marks
-        const [quiz] = await connection.query(`
-            SELECT id, total_marks FROM quizzes WHERE id = ?
-        `, [quizId]);
+            const responseId = responseResult.insertId;
 
-        if (quiz.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Quiz not found'
-            });
-        }
-
-        // 2. Create response record
-        const responseId = generateId('res');
-        await connection.query(`
-            INSERT INTO responses (id, quiz_id, user_id, total_score, completed_at)
-            VALUES (?, ?, ?, 0, NOW())
-        `, [responseId, quizId, userId]);
-
-        let totalScore = 0;
-
-        // 3. Process each answer
-        for (const answer of answers) {
-            const [question] = await connection.query(`
-                SELECT id, answer_type, marks 
-                FROM questions 
-                WHERE id = ? AND quiz_id = ?
-            `, [answer.question_id, quizId]);
-
-            if (question.length === 0) continue;
-
-            const questionData = question[0];
-            let isCorrect = false;
-            let marksObtained = 0;
-            let correctOptionId = null;
-
-            // Check if answer is correct
-            if (questionData.answer_type === 'single' || questionData.answer_type === 'multiple') {
-                // For MCQ questions, get correct options from database
-                const [correctOptions] = await connection.query(`
-                    SELECT id FROM options 
-                    WHERE question_id = ? AND is_correct = 1
-                `, [answer.question_id]);
-
-                // Compare user's answer with correct options
-                if (correctOptions.length > 0) {
-                    correctOptionId = correctOptions[0].id;
-
-                    if (questionData.answer_type === 'single') {
-                        isCorrect = answer.answer.length === 1 &&
-                            answer.answer[0] === correctOptions[0].id;
-                    } else {
-                        // For multiple choice, check if all correct options are selected
-                        const correctIds = correctOptions.map(o => o.id);
-                        isCorrect = arraysEqual(answer.answer.sort(), correctIds.sort());
-                    }
-                }
-            } else if (questionData.answer_type === 'boolean') {
-                // For boolean questions, compare directly
-                const [correctAnswer] = await connection.query(`
-                    SELECT option_text FROM options 
-                    WHERE question_id = ? AND is_correct = 1 LIMIT 1
-                `, [answer.question_id]);
-
-                if (correctAnswer.length > 0) {
-                    isCorrect = answer.answer === correctAnswer[0].option_text;
-                }
-            } else {
-                // For text/number questions, we can't auto-grade
-                isCorrect = false;
+            // Insert answers
+            for (const answer of answers) {
+                await connection.query(
+                    `INSERT INTO response_answers (response_id, question_id, answer) 
+                     VALUES (?, ?, ?)`,
+                    [responseId, answer.question_id, JSON.stringify(answer.answer)]
+                );
             }
 
-            // Calculate marks obtained
-            marksObtained = isCorrect ? questionData.marks : 0;
-            totalScore += marksObtained;
+            // Calculate score
+            const [scoreResult] = await connection.query(`
+                SELECT 
+                    SUM(CASE 
+                        WHEN q.answer_type = 'single' THEN 
+                            CASE WHEN JSON_UNQUOTE(ra.answer) = q.correct_answer THEN q.marks ELSE 0 END
+                        WHEN q.answer_type = 'multiple' THEN 
+                            CASE WHEN JSON_CONTAINS(ra.answer, q.correct_answer) THEN q.marks ELSE 0 END
+                        WHEN q.answer_type = 'boolean' THEN 
+                            CASE WHEN JSON_UNQUOTE(ra.answer) = q.correct_answer THEN q.marks ELSE 0 END
+                        ELSE 0
+                    END) as total_score
+                FROM response_answers ra
+                JOIN questions q ON ra.question_id = q.id
+                WHERE ra.response_id = ?
+            `, [responseId]);
 
-            // Save response details
-            await connection.query(`
-                INSERT INTO response_details (
-                    response_id, 
-                    question_id, 
-                    answer_text, 
-                    option_id, 
-                    is_correct, 
-                    marks_obtained
-                ) VALUES (?, ?, ?, ?, ?, ?)
-            `, [
-                responseId,
-                answer.question_id,
-                typeof answer.answer === 'string' ? answer.answer : null,
-                (questionData.answer_type === 'single' || questionData.answer_type === 'multiple') ?
-                    answer.answer[0] : null,
-                isCorrect ? 1 : 0,
-                marksObtained
-            ]);
+            // Update response with score
+            await connection.query(
+                `UPDATE responses SET total_score = ? WHERE id = ?`,
+                [scoreResult[0].total_score || 0, responseId]
+            );
+
+            await connection.commit();
+
+            res.json({
+                success: true,
+                message: 'Quiz submitted successfully',
+                score: scoreResult[0].total_score || 0
+            });
+
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
         }
 
-        // 4. Update response with total score
-        await connection.query(`
-            UPDATE responses 
-            SET total_score = ? 
-            WHERE id = ?
-        `, [totalScore, responseId]);
-
-        await connection.commit();
-
-        res.json({
-            success: true,
-            response_id: responseId,
-            quiz_id: quizId,
-            total_score: totalScore,
-            total_marks: quiz[0].total_marks
-        });
-
     } catch (error) {
-        if (connection) await connection.rollback();
         console.error('Error submitting quiz:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to submit quiz'
-        });
-    } finally {
-        if (connection) connection.release();
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
-// Helper function to compare arrays
-function arraysEqual(a, b) {
-    if (a === b) return true;
-    if (a == null || b == null) return false;
-    if (a.length !== b.length) return false;
-
-    for (let i = 0; i < a.length; ++i) {
-        if (a[i] !== b[i]) return false;
-    }
-    return true;
-}
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
@@ -1014,15 +937,58 @@ function authenticateToken(req, res, next) {
     });
 }
 
+// Get available quizzes for students
+app.get('/api/student/available-quizzes', authenticateToken, async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        
+        if (!studentId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Student ID is required' 
+            });
+        }
+
+        const [quizzes] = await pool.query(`
+            SELECT 
+                q.id,
+                q.title,
+                q.description,
+                q.total_marks,
+                q.created_at,
+                u.first_name as teacher_first_name,
+                u.last_name as teacher_last_name,
+                u.department
+            FROM quizzes q
+            JOIN users u ON q.created_by = u.id
+            WHERE q.is_published = 1
+            AND q.id NOT IN (
+                SELECT quiz_id 
+                FROM responses 
+                WHERE user_id = ?
+            )
+            ORDER BY q.created_at DESC
+        `, [studentId]);
+
+        return res.json({
+            success: true,
+            quizzes: quizzes || []
+        });
+    } catch (error) {
+        console.error('Error getting available quizzes:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Server error while fetching available quizzes',
+            error: error.message
+        });
+    }
+});
+
+// Static files and catch-all route
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Catch-all route for SPA
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/index.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
